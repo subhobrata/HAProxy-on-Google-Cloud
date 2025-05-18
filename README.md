@@ -1,6 +1,6 @@
 # Cloud SQL Blue‑Green Demo with HAProxy
 
-This sample repository shows **blue‑green Postgres Cloud SQL** instances on Google Cloud behind an **HAProxy** load‑balancer, so you can switch database traffic in seconds with zero‑downtime.
+This sample repository shows **blue‑green Postgres Cloud SQL** instances on Google Cloud behind an **HAProxy** load‑balancer with **TLS termination** and firewall rules, so you can switch database traffic in seconds with zero‑downtime.
 
 ```
 ┌───────────────┐                 ┌────────────┐
@@ -25,8 +25,13 @@ This sample repository shows **blue‑green Postgres Cloud SQL** instances on 
 ```bash
 cd terraform
 terraform init
-terraform apply -var='project_id=YOUR_GCP_PROJECT'                  -var='region=asia-south1'                  -var='db_password=Str0ngPass!'
+terraform apply -var='project_id=YOUR_GCP_PROJECT' \
+                -var='region=asia-south1' \
+                -var='db_password=Str0ngPass!' \
+                -var='allowed_cidrs=["YOUR_IP/32"]'
 ```
+
+`allowed_cidrs` controls which IP ranges can reach ports **5432** and **9999** on the HAProxy VM.
 
 When the apply finishes you’ll get:
 
@@ -60,8 +65,7 @@ app/
 
 ## Caveats
 
-* **Not production‑ready**: no SSL, minimal firewall, single HAProxy VM.
-* Use the Cloud SQL Auth Proxy or private service networking for production.
+* Use the Cloud SQL Auth Proxy or private service networking for true production deployments.
 
 ---  
 © 2025 Your Name. MIT License.
