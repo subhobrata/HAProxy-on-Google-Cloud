@@ -8,8 +8,8 @@ if [[ "$TARGET" != "blue" && "$TARGET" != "green" ]]; then
 fi
 
 HAPROXY_IP=${HAPROXY_IP:-"127.0.0.1"}
-echo "Disabling other backend..."
-echo "disable backend pg_${TARGET}" | socat stdio TCP:${HAPROXY_IP}:9999 || true
 OTHER=$( [[ "$TARGET" == "blue" ]] && echo "green" || echo "blue" )
+echo "Disabling $OTHER and enabling $TARGET ..."
+echo "disable backend pg_${OTHER}" | socat stdio TCP:${HAPROXY_IP}:9999 || true
 echo "enable backend pg_${TARGET}" | socat stdio TCP:${HAPROXY_IP}:9999
 echo "Switched traffic to $TARGET"

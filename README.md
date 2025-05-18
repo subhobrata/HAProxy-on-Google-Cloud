@@ -11,8 +11,9 @@ This sample repository shows **blue‑green Postgres Cloud SQL** instances on 
 ```
 
 * **Blue / Green** instances are created as *regional‑HA* Cloud SQL (PostgreSQL 15).
-* **HAProxy** runs on a small Compute Engine VM (or container) deployed via Terraform.
-* Switch traffic with `haproxy/switch_backend.sh` in \<1 s using the Runtime API.
+* **HAProxy** runs on a small Compute Engine VM (or container) deployed via Terraform.
+* TLS termination uses a self-signed certificate and the runtime API is available on port `9999`.
+* Switch traffic with `haproxy/switch_backend.sh` in <1 s using the runtime API.
 
 ## Prerequisites
 
@@ -25,7 +26,10 @@ This sample repository shows **blue‑green Postgres Cloud SQL** instances on 
 ```bash
 cd terraform
 terraform init
-terraform apply -var='project_id=YOUR_GCP_PROJECT'                  -var='region=asia-south1'                  -var='db_password=Str0ngPass!'
+terraform apply -var='project_id=YOUR_GCP_PROJECT' \
+                 -var='region=asia-south1' \
+                 -var='db_password=Str0ngPass!' \
+                 -var='allowed_cidrs=0.0.0.0/0'
 ```
 
 When the apply finishes you’ll get:
@@ -51,8 +55,8 @@ psql -h <haproxy_ip> -U postgres -d appdb  # connect via HAProxy
 ```
 terraform/          # IaC for Cloud SQL, VPC & HAProxy VM
 haproxy/
-   └─ haproxy.cfg   # base config, 2 back‑ends
-   └─ Dockerfile    # optional container build
+   └─ haproxy.cfg   # base config, TLS & runtime API
+   └─ Dockerfile    # optional container build (generates certs)
    └─ switch_backend.sh
 app/
    └─ main.py       # tiny test client (psycopg2)
@@ -60,8 +64,9 @@ app/
 
 ## Caveats
 
-* **Not production‑ready**: no SSL, minimal firewall, single HAProxy VM.
-* Use the Cloud SQL Auth Proxy or private service networking for production.
+* Self‑signed TLS is generated automatically for HAProxy.
+* A simple firewall rule allows access to port 5432 from `allowed_cidrs`.
+* For real deployments consider the Cloud SQL Auth Proxy and multiple HAProxy instances.
 
 ---  
 © 2025 Your Name. MIT License.
