@@ -12,6 +12,7 @@ This sample repository shows **blue‑green Postgres Cloud SQL** instances on 
 
 * **Blue / Green** instances are created as *regional‑HA* Cloud SQL (PostgreSQL 15).
 * **HAProxy** runs on a small Compute Engine VM (or container) deployed via Terraform.
+* HAProxy terminates TLS with a self‑signed certificate and exposes its Runtime API on port `9999`.
 * Switch traffic with `haproxy/switch_backend.sh` in \<1 s using the Runtime API.
 
 ## Prerequisites
@@ -25,7 +26,10 @@ This sample repository shows **blue‑green Postgres Cloud SQL** instances on 
 ```bash
 cd terraform
 terraform init
-terraform apply -var='project_id=YOUR_GCP_PROJECT'                  -var='region=asia-south1'                  -var='db_password=Str0ngPass!'
+terraform apply -var='project_id=YOUR_GCP_PROJECT' \ 
+                 -var='region=asia-south1' \ 
+                 -var='db_password=Str0ngPass!' \ 
+                 -var='allowed_cidrs=YOUR_IP/32'
 ```
 
 When the apply finishes you’ll get:
@@ -60,7 +64,7 @@ app/
 
 ## Caveats
 
-* **Not production‑ready**: no SSL, minimal firewall, single HAProxy VM.
+* **Not production‑ready**: self‑signed certificate, single HAProxy VM.
 * Use the Cloud SQL Auth Proxy or private service networking for production.
 
 ---  
