@@ -58,10 +58,11 @@ app/
    └─ main.py       # tiny test client (psycopg2)
 ```
 
-## Caveats
+## Production Features
 
-* **Not production‑ready**: no SSL, minimal firewall, single HAProxy VM.
-* Use the Cloud SQL Auth Proxy or private service networking for production.
+* TLS encryption terminates at HAProxy
+* Basic firewall restricts access to ports 22 and 5432
+* Two Cloud SQL instances provide blue/green deployment targets
 
 ---  
 © 2025 Your Name. MIT License.

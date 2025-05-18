@@ -25,6 +25,19 @@ resource "google_compute_subnetwork" "subnet" {
   ip_cidr_range = "10.10.0.0/24"
 }
 
+resource "google_compute_firewall" "haproxy" {
+  name    = "haproxy-fw"
+  network = google_compute_network.vpc.id
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22", "5432"]
+  }
+
+  source_ranges = var.allowed_cidrs
+  target_tags   = ["haproxy"]
+}
+
 # Blue & Green Cloud SQL (regional‑HA)
 locals {
   instances = [
@@ -92,7 +105,13 @@ resource "google_compute_instance" "haproxy" {
 
   metadata_startup_script = <<-EOF
     apt-get update -y
-    apt-get install -y haproxy socat
+    apt-get install -y haproxy socat openssl
+    openssl req -x509 -newkey rsa:2048 -sha256 -days 365 -nodes \
+      -subj "/CN=haproxy" \
+      -keyout /etc/ssl/private/haproxy.key \
+      -out /etc/ssl/certs/haproxy.crt
+    cat /etc/ssl/certs/haproxy.crt /etc/ssl/private/haproxy.key > /etc/haproxy/server.pem
+    chmod 600 /etc/haproxy/server.pem
     cat > /etc/haproxy/haproxy.cfg <<CFG
 global
   log /dev/log local0
@@ -104,7 +123,7 @@ defaults
   timeout server  1m
 
 frontend pg_front
-  bind *:5432
+  bind *:5432 ssl crt /etc/haproxy/server.pem
   default_backend pg_blue
 
 backend pg_blue
